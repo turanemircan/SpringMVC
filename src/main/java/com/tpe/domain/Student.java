@@ -1,5 +1,7 @@
 package com.tpe.domain;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotEmpty;
@@ -22,6 +24,9 @@ public class Student {
     @NotNull(message = "Please provide grade!") // null kabul etmez
     @Column(nullable = false)
     private Integer grade;
+
+    // jsonformat:JSON a dönüştürürken belirli bir format kullanılmasını sağlar
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createDate = LocalDateTime.now(); // Objenin oluşturulduğu tarih // Objenin kaydedildiği tarihi almak istesek: prepersist
 
     // getter-setter

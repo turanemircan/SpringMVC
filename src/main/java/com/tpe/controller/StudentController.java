@@ -1,6 +1,7 @@
 package com.tpe.controller;
 
 import com.tpe.domain.Student;
+import com.tpe.exception.StudentNotFoundException;
 import com.tpe.repository.IStudentRepository;
 import com.tpe.service.IStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,15 @@ import org.springframework.web.servlet.ModelAndView;
 
 import javax.validation.Valid;
 import java.util.List;
+
+// Spring Web MVC ile dinamik bir web uygulaması ya da Rest API geliştirebiliriz.
+// Spring Web MVC'de yazmış olduğumuz kodlar Spring tarafından otomatik olarak Dispatcher Servlet'a dönüştürülür.
+// Bizim bir servlet class yazmamıza gerek kalmaz. Dispatcher Servlet bütün Request'leri(istekleri) karşılar. İlgili Controller'lara yönlendirir.
+// Bu Controller'larda sizin Anote etmiş(eşleştirmiş) olduğunuz methodlar ile gelen Request'lere karşılık Response'ları kullanıcıya döndürmüş olur.
+// Dinamik bir web uygulamasında Controller'da hazırlamış olduğunuz Response içerisindeki Model(Data) ViewResolver tarafından sizin vermiş olduğunuz sayfa ismi ve Model ile birleştirilerek
+// Response olarak View katmanında kullanıcıya sunulur.
+// Bir Rest API geliştiriyorsak bir View Katmanı yok JSON, txt, HTML gibi formatlar kullanılabilir. Fakat OOP'ye çok uygun olması sebebiyle daha çok JSON format tercih edilir.
+// Bu durumda Rest API da kullanıcıdan bilgilerimizi alırken eğer birden fazla bilgi alacaksak body'sinden JSON formatta alabiliriz. Responselarımızı döndürürken Yine JSON formatta döndürebiliriz.
 
 @Controller
 // Bu class'ın objesi Spring tarafından üretilecek yani bir bean oluşturulacak. // requestler bu classta karşılanacak ve ilgili metodlarla maplenecek
@@ -86,7 +96,7 @@ public class StudentController {
     // response:update için id si verilen öğrencinin bilgileri ile formu gösterme
     // id'si verilen öğrenciyi bulmamız gerekir...
     @GetMapping("/update")
-    public ModelAndView sendFormUpdate(@RequestParam("id") Long identity) {
+    public ModelAndView sendFormUpdate(@RequestParam("id") Long identity) { // Bir path tek varsa RequestParam isim vermesekte olur.
 
         Student foundStudent = service.findStudentById(identity);
 
@@ -94,5 +104,33 @@ public class StudentController {
         mav.addObject("student", foundStudent);
         mav.setViewName("studentForm");
         return mav;
+    }
+
+    // kullanıcıdan bilgi nasıl alınır
+    // 1-form/body(JSON)
+    // 2-query param : /query?id=3
+    // 3-path param : /3
+    // query param ve path param sadece 1 tane ise isim belirtmek opsiyonel
+
+    // 4- Bir öğrenciyi silme
+    // request : http://localhost:8080/SpringMvc/students/delete/4 + GET
+    // response :öğrenci silinir ve kalan öğrenciler gösterilir
+    // PathVariable id değişken ismini kendimiz veriyoruz Farklı isimlerde verebilirdik.
+
+    @GetMapping("/delete/{id}") // süslü parantez içinde kullanmamızın sebebi dinamik olması
+    public String deleteStudent(@PathVariable("id") Long identity) { // Bir path tek varsa PathVariable isim vermesekte olur.
+
+        service.deleteStudent(identity);
+
+        return "redirect:/students";
+    }
+
+    // Cath blogu yerine @ExceptionHandler anatsayonunu kullanacaz
+    @ExceptionHandler(StudentNotFoundException.class)
+    public ModelAndView handleException(Exception exception) {
+        ModelAndView modelAndView = new ModelAndView();
+        modelAndView.addObject("message", exception.getMessage());
+        modelAndView.setViewName("notFound");
+        return modelAndView;
     }
 }
